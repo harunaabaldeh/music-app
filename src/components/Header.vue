@@ -22,13 +22,14 @@
 </template>
 
 <script>
-import { mapStores } from "pinia"
+import { mapStores, mapWritableState } from "pinia"
 import useModalStore from "@/stores/modal"
 
 export default {
     name: "AppHeader",
     computed: {
-        ...mapStores(useModalStore)
+        ...mapStores(useModalStore),
+        ...mapWritableState(useModalStore, ["isOpen"])
     },
     methods: {
         toggleAuthModal() {
