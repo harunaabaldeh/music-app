@@ -45,6 +45,7 @@
       <label class="inline-block mb-2">Password</label>
       <vee-field name="password" :bails="false" v-slot="{ field, errors }">
         <input
+          autocomplete="off"
           placeholder="Password"
           type="password"
           class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
@@ -59,12 +60,26 @@
     <div class="mb-3">
       <label class="inline-block mb-2">Confirm Password</label>
       <vee-field
+        autocomplete="off"
         type="password"
         name="confirm_password"
         class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
         placeholder="Confirm Password"
       />
       <ErrorMessage class="text-red-600" name="confirm_password" />
+    </div>
+    <!-- Role -->
+    <div class="mb-3">
+      <label class="inline-block mb-2">Are you a Listener or an Artist?</label>
+      <vee-field
+        as="select"
+        name="lister_or_artist"
+        class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
+      >
+        <option value="Listner">Listner</option>
+        <option value="Artist">Artist</option>
+      </vee-field>
+      <ErrorMessage class="text-red-600" name="lister_or_artist" />
     </div>
     <!-- Country -->
     <div class="mb-3">
@@ -102,6 +117,9 @@
   </vee-form>
 </template>
 <script>
+import { mapActions } from 'pinia'
+import useUserStore from '@/stores/user'
+
 export default {
   name: 'RegisterForm',
   data() {
@@ -114,10 +132,12 @@ export default {
         password: 'required|min:9|max:18|excluded:password',
         confirm_password: 'passwords_mismatch:@password',
         country: 'required|country_excluded:Senegal',
-        tos: 'tos'
+        tos: 'tos',
+        lister_or_artist: 'required'
       },
       userData: {
-        country: 'USA'
+        country: 'USA',
+        lister_or_artist: 'Listner'
       },
       reg_in_submission: false,
       reg_show_alert: false,
@@ -125,16 +145,32 @@ export default {
       reg_alert_msg: 'Please wait! Your account is being created'
     }
   },
+
   methods: {
-    register(values) {
+    ...mapActions(useUserStore, {
+      createUser: 'register'
+    }),
+
+    async register(values) {
       this.reg_show_alert = true
       this.reg_in_submission = true
       this.reg_alert_variant = 'bg-blue-500'
       this.reg_alert_msg = 'Please wait! Your account is being created.'
 
+      try {
+        await this.createUser(values)
+      } catch (errors) {
+        this.reg_in_submission = false
+        this.reg_alert_variant = 'bg-red-500'
+        this.reg_alert_msg = 'An unexpected error occure. Please try again later.'
+        console.log(errors)
+        return
+      }
+
       this.reg_alert_variant = 'bg-green-500'
       this.reg_alert_msg = 'Success! Your account has been created.'
-      console.log(values)
+
+      window.location.reload()
     }
   }
 }
